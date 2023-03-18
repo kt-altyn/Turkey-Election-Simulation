@@ -9,6 +9,7 @@ hdp_old_percentage = 11.62
 sp_old_percentage = 1.35
 deva_old_percentage = 0
 gelecek_old_percentage = 0
+other_old_percentage = 0.73
 
 akp_total_seats = 0
 mhp_total_seats = 0
@@ -18,9 +19,10 @@ hdp_total_seats = 0
 sp_total_seats = 0
 deva_total_seats = 0
 gelecek_total_seats = 0
+other_total_seats = 0
 
 # Take input from the user for each party
-print("Print estimated percentages by parties... (e.g 12.95")
+print("Print estimated percentages by parties... (e.g 12.95)")
 akp_multiplier = float(input("% for AKP: "))
 mhp_multiplier = float(input("% for MHP: "))
 chp_multiplier = float(input("% for CHP: "))
@@ -29,6 +31,7 @@ hdp_multiplier = float(input("% for HDP: "))
 sp_multiplier = float(input("% for SP: "))
 deva_multiplier = float(input("% for DEVA: "))
 gelecek_multiplier = float(input("% for GELECEK: "))
+other_multiplier = 100 - akp_multiplier - mhp_multiplier - chp_multiplier - iyi_multiplier - hdp_multiplier - sp_multiplier - deva_multiplier - gelecek_multiplier
 
 # Define the filename and path of the CSV file
 filename = "trpoll.csv"
@@ -41,7 +44,7 @@ with open(filename, 'r') as csvfile:
      # Create the output CSV file and write the header row
     with open(output_filename, 'w', newline='') as output_file:
         writer = csv.writer(output_file, delimiter=';')
-        writer.writerow(['city', 'akp', 'mhp', 'chp', 'iyi', 'hdp', 'sp'])
+        writer.writerow(['city', 'akp', 'mhp', 'chp', 'iyi', 'hdp', 'sp', 'deva', 'gelecek'])
         
         # Iterate over each row in the CSV file
         for row in reader:
@@ -55,8 +58,9 @@ with open(filename, 'r') as csvfile:
             iyi_votes = int(row['iyi'])
             hdp_votes = int(row['hdp'])
             sp_votes = int(row['sp'])
-            deva_votes = int(row['gelecek'])
-            gelecek_votes = int(row['deva'])
+            deva_votes = int(row['deva'])
+            gelecek_votes = int(row['gelecek'])
+            other_votes = int(row['other'])
             
             # Apply the multipliers to each party's vote count
             akp_votes *= akp_multiplier/akp_old_percentage
@@ -65,11 +69,12 @@ with open(filename, 'r') as csvfile:
             iyi_votes *= iyi_multiplier/iyi_old_percentage
             hdp_votes *= hdp_multiplier/hdp_old_percentage
             sp_votes *= sp_multiplier/sp_old_percentage
-            deva_votes = 0.6 * akp_old_percentage
-            gelecek_votes = 0.4 * akp_old_percentage
+            deva_votes = 0.5 * akp_votes * deva_multiplier / (akp_multiplier - deva_multiplier - gelecek_multiplier)
+            gelecek_votes = 0.5 * akp_votes * gelecek_multiplier / (akp_multiplier - deva_multiplier - gelecek_multiplier)
+            other_votes = other_multiplier * (other_votes/other_old_percentage)
             
             # Calculate the total number of votes cast in the city
-            total_votes = akp_votes + mhp_votes + chp_votes + iyi_votes + hdp_votes + sp_votes + deva_votes + gelecek_votes
+            total_votes = akp_votes + mhp_votes + chp_votes + iyi_votes + hdp_votes + sp_votes + deva_votes + gelecek_votes + other_votes
             
             # Calculate the percentage of votes cast for each party in the city
             akp_percentage = akp_votes / total_votes
@@ -80,6 +85,7 @@ with open(filename, 'r') as csvfile:
             sp_percentage = sp_votes / total_votes
             deva_percentage = deva_votes / total_votes
             gelecek_percentage = gelecek_votes / total_votes
+            other_percentage = other_votes / total_votes
             
             # Calculate the number of deputy chairs that each party will get in the city
             akp_deputy_chairs = int(akp_percentage * int(row['vekil']))
@@ -104,6 +110,7 @@ with open(filename, 'r') as csvfile:
             # Assign the remaining deputy chairs to the parties with the highest fractional remainders
             while (akp_deputy_chairs + mhp_deputy_chairs + chp_deputy_chairs + iyi_deputy_chairs + hdp_deputy_chairs + sp_deputy_chairs + deva_deputy_chairs + gelecek_deputy_chairs) < int(row['vekil']):
                 max_remainder = max(akp_remainder, mhp_remainder, chp_remainder, iyi_remainder, hdp_remainder, sp_remainder, deva_remainder, gelecek_remainder)
+                
                 if max_remainder == akp_remainder and akp_deputy_chairs < int(row['vekil']):
                     akp_deputy_chairs += 1
                     akp_remainder = -1
@@ -143,8 +150,8 @@ with open(filename, 'r') as csvfile:
                         
             
             # Print out the updated percentages and number of deputy chairs for each party in the city
-            print(f"{city}: AKP {akp_percentage:.2%}, {akp_deputy_chairs} deputy chair(s);MHP {mhp_percentage:.2%}, {mhp_deputy_chairs} deputy chair(s); CHP {chp_percentage:.2%}, {chp_deputy_chairs} deputy chair(s); IYI {iyi_percentage:.2%}, {iyi_deputy_chairs} deputy chair(s); HDP {hdp_percentage:.2%}, {hdp_deputy_chairs} deputy chair(s); SP {sp_percentage:.2%}, {sp_deputy_chairs} deputy chair(s); DEVA {deva_percentage: 0.2%}, {deva_deputy_chairs} deputy chair(s); GELECEK {gelecek_percentage: 0.2%}, {gelecek_deputy_chairs} deputy chair(s)")
-            
+            print(f"{city}: AKP {akp_percentage:.2%}, {akp_deputy_chairs} seat;MHP {mhp_percentage:.2%}, {mhp_deputy_chairs} seat; CHP {chp_percentage:.2%}, {chp_deputy_chairs} seat; IYI {iyi_percentage:.2%}, {iyi_deputy_chairs} seat; HDP {hdp_percentage:.2%}, {hdp_deputy_chairs} seat; SP {sp_percentage:.2%}, {sp_deputy_chairs} seat; DEVA {deva_percentage: .2%}, {deva_deputy_chairs} seat; GELECEK {gelecek_percentage: .2%}, {gelecek_deputy_chairs} seat; OTHER {other_percentage: 0.2%}")
+            #print(total_votes)
 
 # Print out the total number of seats for each party
 print(f"Total seats: AKP {akp_total_seats}, MHP {mhp_total_seats}, CHP {chp_total_seats}, IYI {iyi_total_seats}, HDP {hdp_total_seats}, SP {sp_total_seats}, DEVA {deva_total_seats}, GELECEK {gelecek_total_seats}")
